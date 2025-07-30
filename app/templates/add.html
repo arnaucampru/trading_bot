@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Añadir nueva operación</title>
+    <style>
+      body {
+        background-color: #fff;
+        color: #111;
+        font-family: Arial, sans-serif;
+        margin: 2em;
+      }
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+      }
+      form p {
+        margin-bottom: 16px;
+        font-size: 16px;
+      }
+      input[type="text"],
+      input[type="number"],
+      input[type="time"],
+      select {
+        padding: 8px;
+        font-size: 15px;
+        width: 250px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      input[type="submit"] {
+        background-color: #111;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      input[type="submit"]:hover {
+        background-color: #333;
+      }
+      .flash-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #c3e6cb;
+      }
+      .flash-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #f5c6cb;
+      }
+      .field-error {
+        color: red;
+        font-size: 0.9em;
+      }
+      a {
+        display: inline-block;
+        margin-top: 25px;
+        text-decoration: none;
+        color: #111;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        padding: 8px 16px;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+      a:hover {
+        background-color: #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nueva operación</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <p>{{ form.symbol.label }} {{ form.symbol(size=20) }}<br>
+      {% if form.symbol.errors %}<span class="field-error">{{ form.symbol.errors[0] }}</span>{% endif %}</p>
+
+      <p>{{ form.amount.label }} {{ form.amount() }}<br>
+      {% if form.amount.errors %}<span class="field-error">{{ form.amount.errors[0] }}</span>{% endif %}</p>
+
+      <p>{{ form.entry_time.label }} (formato EST, entre 09:30 y 16:00) {{ form.entry_time(value="09:30:00") }}<br>
+      {% if form.entry_time.errors %}<span class="field-error">{{ form.entry_time.errors[0] }}</span>{% endif %}</p>
+
+      <p>{{ form.exit_time.label }} (formato EST, entre 09:30 y 16:00) {{ form.exit_time(value="16:00:00") }}<br>
+      {% if form.exit_time.errors %}<span class="field-error">{{ form.exit_time.errors[0] }}</span>{% endif %}</p>
+
+      <p>{{ form.stop_loss.label }} {{ form.stop_loss() }}<br>
+      {% if form.stop_loss.errors %}<span class="field-error">{{ form.stop_loss.errors[0] }}</span>{% endif %}</p>
+
+      <p>¿Usar Stop Profit?
+        <input type="radio" name="use_stop_profit" value="yes" id="use_sp_yes" checked> Sí
+        <input type="radio" name="use_stop_profit" value="no" id="use_sp_no"> No
+      </p>
+
+      <div id="stop_profit_field">
+        <p>{{ form.stop_profit.label }} {{ form.stop_profit() }}<br>
+        {% if form.stop_profit.errors %}<span class="field-error">{{ form.stop_profit.errors[0] }}</span>{% endif %}</p>
+      </div>
+
+      <p>{{ form.direction.label }} {{ form.direction(id="direction") }}<br>
+      {% if form.direction.errors %}<span class="field-error">{{ form.direction.errors[0] }}</span>{% endif %}</p>
+
+      <p>Broker 
+        <input type="text" id="broker" name="broker" value="Selecciona una dirección" readonly>
+      </p>
+
+      <p>{{ form.submit() }}</p>
+    </form>
+
+    <a href="{{ url_for('home') }}">🔙 Volver al inicio</a>
+
+    <script>
+      const directionSelect = document.getElementById("direction");
+      const brokerInput = document.getElementById("broker");
+
+      function updateBroker() {
+        if (directionSelect.value === "long") {
+          brokerInput.value = "Interactive Brokers";
+        } else if (directionSelect.value === "short") {
+          brokerInput.value = "The Guardia (DAS)";
+        } else {
+          brokerInput.value = "Selecciona una dirección";
+        }
+      }
+
+      directionSelect.addEventListener("change", updateBroker);
+      updateBroker();
+
+      const useSPYes = document.getElementById("use_sp_yes");
+      const useSPNo = document.getElementById("use_sp_no");
+      const stopProfitField = document.getElementById("stop_profit_field");
+
+      function toggleStopProfitField() {
+        stopProfitField.style.display = useSPYes.checked ? "block" : "none";
+      }
+
+      useSPYes.addEventListener("change", toggleStopProfitField);
+      useSPNo.addEventListener("change", toggleStopProfitField);
+      toggleStopProfitField();
+    </script>
+  </body>
+</html>

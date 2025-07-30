@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Operaciones Registradas</title>
+    <style>
+      body {
+        background-color: #fff;
+        color: #111;
+        font-family: Arial, sans-serif;
+        margin: 2em;
+      }
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+      }
+      h2 {
+        margin-top: 40px;
+        font-size: 22px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+      }
+      .flash.success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #c3e6cb;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 15px;
+      }
+      th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+      }
+      th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+      button {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #c0392b;
+      }
+      .top-actions {
+        margin-bottom: 30px;
+      }
+      .top-actions a {
+        margin-right: 20px;
+        text-decoration: none;
+        color: #111;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        padding: 6px 12px;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+      .top-actions a:hover {
+        background-color: #e0e0e0;
+      }
+      .in-progress {
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h1>Operaciones registradas</h1>
+
+    <div class="top-actions">
+      <a href="{{ url_for('add_operation') }}">➕ Nueva operación</a>
+      <a href="{{ url_for('home') }}">🏠 Volver al inicio</a>
+    </div>
+
+    <h2>📅 Operaciones de hoy</h2>
+    <a href="{{ url_for('export_csv_today') }}">📤 Descargar CSV de hoy</a>
+    <table>
+      <tr>
+        <th>Símbolo</th>
+        <th>Cantidad</th>
+        <th>Hora entrada</th>
+        <th>Precio entrada</th>
+        <th>Hora salida</th>
+        <th>Precio salida</th>
+        <th>Ganancia</th>
+        <th>Stop Loss</th>
+        <th>Stop Profit</th>
+        <th>Dirección</th>
+        <th>Broker</th>
+        <th>Fecha</th>
+        <th>🗑️</th>
+        <th>IB</th>
+      </tr>
+      {% for op in operations_today %}
+      <tr>
+        <td>{{ op.symbol }}</td>
+        <td>{{ op.amount }}</td>
+        <td>{{ op.entry_time }}</td>
+        <td>{% if op.entry_price %}{{ op.entry_price }}{% else %}<span class="in-progress">En curso</span>{% endif %}</td>
+        <td>{{ op.exit_time }}</td>
+        <td>{% if op.exit_price %}{{ op.exit_price }}{% else %}<span class="in-progress">En curso</span>{% endif %}</td>
+        <td>
+          {% if op.ganancia is not none %}
+            {% if op.ganancia >= 0 %}
+              <span style="color: green;">+{{ op.ganancia }}€</span>
+            {% else %}
+              <span style="color: red;">{{ op.ganancia }}€</span>
+            {% endif %}
+          {% else %}
+            <span class="in-progress">En curso</span>
+          {% endif %}
+        </td>
+        <td>{{ op.stop_loss }}</td>
+        <td>{{ op.stop_profit }}</td>
+        <td>{{ op.direction }}</td>
+        <td>{{ op.broker }}</td>
+        <td>{{ op.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_operation', operation_id=op.id) }}" onsubmit="return confirm('¿Seguro que quieres eliminar esta operación?')">
+            <button type="submit">Eliminar</button>
+          </form>
+        </td>
+        <td>
+          <a href="{{ url_for('send_to_ib', operation_id=op.id) }}" style="color: blue;">Enviar a IB</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h2>🗂️ Historial de operaciones</h2>
+    <a href="{{ url_for('export_csv') }}">📥 Descargar todo el historial</a>
+    <table>
+      <tr>
+        <th>Símbolo</th>
+        <th>Cantidad</th>
+        <th>Hora entrada</th>
+        <th>Precio entrada</th>
+        <th>Hora salida</th>
+        <th>Precio salida</th>
+        <th>Ganancia</th>
+        <th>Stop Loss</th>
+        <th>Stop Profit</th>
+        <th>Dirección</th>
+        <th>Broker</th>
+        <th>Fecha</th>
+        <th>🗑️</th>
+        <th>IB</th>
+      </tr>
+      {% for op in operations_all %}
+      <tr>
+        <td>{{ op.symbol }}</td>
+        <td>{{ op.amount }}</td>
+        <td>{{ op.entry_time }}</td>
+        <td>{% if op.entry_price %}{{ op.entry_price }}{% else %}<span class="in-progress">En curso</span>{% endif %}</td>
+        <td>{{ op.exit_time }}</td>
+        <td>{% if op.exit_price %}{{ op.exit_price }}{% else %}<span class="in-progress">En curso</span>{% endif %}</td>
+        <td>
+          {% if op.ganancia is not none %}
+            {% if op.ganancia >= 0 %}
+              <span style="color: green;">+{{ op.ganancia }}€</span>
+            {% else %}
+              <span style="color: red;">{{ op.ganancia }}€</span>
+            {% endif %}
+          {% else %}
+            <span class="in-progress">En curso</span>
+          {% endif %}
+        </td>
+        <td>{{ op.stop_loss }}</td>
+        <td>{{ op.stop_profit }}</td>
+        <td>{{ op.direction }}</td>
+        <td>{{ op.broker }}</td>
+        <td>{{ op.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_operation', operation_id=op.id) }}" onsubmit="return confirm('¿Seguro que quieres eliminar esta operación?')">
+            <button type="submit">Eliminar</button>
+          </form>
+        </td>
+        <td>
+          <a href="{{ url_for('send_to_ib', operation_id=op.id) }}" style="color: blue;">Enviar a IB</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
