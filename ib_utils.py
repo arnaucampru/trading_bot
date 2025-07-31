@@ -11,9 +11,10 @@ def enviar_ordre_ib(symbol, amount, direction, stop_loss_pct, stop_profit_pct=No
 
         contract = Stock(symbol, 'SMART', 'USD')
         ib.qualifyContracts(contract)
-
+        ib.reqMarketDataType(4)  # Use delayed market data for paper trading
         market_data = ib.reqMktData(contract, '', False, False)
-        time.sleep(2)
+        # time.sleep(2)
+        ib.sleep(2) 
         current_price = market_data.last or market_data.close or 0
         ib.cancelMktData(contract)
 
@@ -61,9 +62,10 @@ def get_exit_price_ib(symbol):
 
         contract = Stock(symbol, 'SMART', 'USD')
         ib.qualifyContracts(contract)
-
+        ib.reqMarketDataType(4)  # Use delayed market data for paper trading
         market_data = ib.reqMktData(contract, '', False, False)
-        time.sleep(2)
+        # time.sleep(2)
+        ib.sleep(2)
         exit_price = market_data.last or market_data.close or 0
         ib.cancelMktData(contract)
         ib.disconnect()
